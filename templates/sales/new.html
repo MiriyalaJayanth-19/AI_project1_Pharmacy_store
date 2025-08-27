@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">New Sale</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('new_sale') }}" id="sale-form">
+    <input type="hidden" name="items" id="items-json">
+                    <div class="mb-3">
+                        <label for="customer_id" class="form-label">Customer <span class="text-danger">*</span></label>
+                        <select class="form-select" id="customer_phone" name="customer_phone" required>
+    <option value="">Select Customer Phone</option>
+    {% for customer in customers %}
+        <option value="{{ customer.phone }}">{{ customer.phone }}</option>
+    {% endfor %}
+</select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Medicines</label>
+                        <div id="medicines-list">
+                            <!-- JS will populate medicine fields -->
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-medicine-btn">
+                            <i class="bi bi-plus-circle"></i> Add Medicine
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <label for="total_amount" class="form-label">Total Amount</label>
+                        <input type="text" class="form-control" id="total_amount" name="total_amount" readonly>
+                    </div>
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('list_sales') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Save Sale
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // JS to dynamically add medicine fields and calculate totals
+    const medicinesData = {{ medicines|tojson }};
+    var medicineIndex = 0;
+
+    function addMedicineField() {
+        const list = document.getElementById('medicines-list');
+        const div = document.createElement('div');
+        div.className = 'row mb-2 align-items-end';
+        div.innerHTML = `
+            <div class="col-md-5">
+                <select class="form-select medicine-select" name="medicines[${medicineIndex}][medicine_id]" required>
+                    <option value="">Select Medicine</option>
+                    ${medicinesData.map(m => `<option value='${m.medicines_id}'>${m.name} ($${parseFloat(m.price).toFixed(2)})</option>`).join('')}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <input type="number" class="form-control quantity-input" name="medicines[${medicineIndex}][quantity]" min="1" value="1" required placeholder="Quantity">
+            </div>
+            <div class="col-md-3">
+                <input type="text" class="form-control price-field" name="medicines[${medicineIndex}][price]" readonly placeholder="Price">
+            </div>
+            <div class="col-md-1">
+                <button type="button" class="btn btn-outline-danger btn-sm remove-medicine-btn"><i class="bi bi-trash"></i></button>
+            </div>
+        `;
+        list.appendChild(div);
+        medicineIndex++;
+    }
+
+    document.getElementById('add-medicine-btn').addEventListener('click', addMedicineField);
+    document.getElementById('medicines-list').addEventListener('click', function(e) {
+        if (e.target.closest('.remove-medicine-btn')) {
+            e.target.closest('.row').remove();
+            calculateTotal();
+        }
+    });
+    document.getElementById('medicines-list').addEventListener('change', function(e) {
+        if (e.target.classList.contains('medicine-select')) {
+            const selectedId = e.target.value;
+            const priceField = e.target.closest('.row').querySelector('.price-field');
+            const medicine = medicinesData.find(m => m.medicines_id == selectedId);
+            priceField.value = medicine ? parseFloat(medicine.price).toFixed(2) : '';
+            calculateTotal();
+        }
+        if (e.target.classList.contains('quantity-input')) {
+            calculateTotal();
+        }
+    });
+    function calculateTotal() {
+        let total = 0;
+        document.querySelectorAll('#medicines-list .row').forEach(row => {
+            const price = parseFloat(row.querySelector('.price-field').value) || 0;
+            const qty = parseInt(row.querySelector('.quantity-input').value) || 0;
+            total += price * qty;
+        });
+        document.getElementById('total_amount').value = total.toFixed(2);
+    }
+    // Initialize with one field
+    addMedicineField();
+
+    // On form submit, collect all medicines and quantities into JSON
+    document.getElementById('sale-form').addEventListener('submit', function(e) {
+        var items = [];
+        document.querySelectorAll('#medicines-list .row').forEach(function(row) {
+            var medicineId = row.querySelector('.medicine-select').value;
+            var quantity = row.querySelector('.quantity-input').value;
+            var price = row.querySelector('.price-field').value;
+            if (medicineId && quantity && price) {
+                items.push({
+                    medicine_id: medicineId,
+                    quantity: quantity,
+                    price: price
+                });
+            }
+        });
+        document.getElementById('items-json').value = JSON.stringify(items);
+    });
+</script>
+{% endblock %}

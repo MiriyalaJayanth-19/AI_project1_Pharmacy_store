@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Sale Details</h5>
+        </div>
+        <div class="card-body">
+            {% if sale %}
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <strong>Sale Number:</strong> #{{ sale.sales_id }}<br>
+                    <strong>Date:</strong> {{ sale.sale_date.strftime('%b %d, %Y %I:%M %p') if sale.sale_date else '' }}<br>
+                    <strong>Sold By:</strong> {{ sale.user_name or 'N/A' }}
+                </div>
+                <div class="col-md-6">
+                    <strong>Customer Name:</strong> {{ sale.customer_name or 'Walk-in Customer' }}<br>
+                    <strong>Phone:</strong> {{ sale.phone or 'N/A' }}<br>
+                    <strong>Email:</strong> {{ sale.email or 'N/A' }}
+                </div>
+            </div>
+            <h6>Sale Items</h6>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Medicine</th>
+                            <th>Manufacturer</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ item.medicine_name }}</td>
+                            <td>{{ item.manufacturer or 'N/A' }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ item.price }}</td>
+                            <td>{{ (item.price | float) * (item.quantity | int) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex justify-content-end">
+                <h5>Total: ₹{{ sale.total_amount }}</h5>
+            </div>
+            <div class="mt-4 d-flex justify-content-between">
+                <a href="{{ url_for('list_sales') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Sales
+                </a>
+                <a href="{{ url_for('print_invoice', sales_id=sale.sales_id) }}" class="btn btn-outline-primary" target="_blank">
+                    <i class="bi bi-printer"></i> Print Invoice
+                </a>
+            </div>
+            {% else %}
+            <div class="alert alert-danger">Sale not found.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

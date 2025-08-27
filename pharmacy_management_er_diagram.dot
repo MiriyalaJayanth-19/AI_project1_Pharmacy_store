@@ -1,0 +1,18 @@
+digraph PharmacyManagement {
+    rankdir=LR;
+    node [shape=record, fontsize=10, fontname="Arial"];
+
+    customers [label="{customers|customer_id : INT PK\lname : VARCHAR(100)\lphone : VARCHAR(20)\lemail : VARCHAR(100)\laddress : TEXT\lcreated_at : TIMESTAMP}"];
+    medicines [label="{medicines|medicines_id : INT PK\lname : VARCHAR(255)\ldescription : TEXT\lprice : DECIMAL(10,2)\lquantity : INT\lmanufacturer : VARCHAR(100)\lexpiry_date : DATE\lcreated_at : TIMESTAMP}"];
+    suppliers [label="{suppliers|supplier_id : INT PK\lsupplier : VARCHAR(50)\lname : VARCHAR(255)\llocation : VARCHAR(100)\lcontact : ENUM}"];
+    user [label="{user|user_id : INT PK\lusername : VARCHAR(64)\lemail : VARCHAR(120)\lpassword_hash : VARCHAR(128)\lis_admin : TINYINT(1)}"];
+    sales [label="{sales|sales_id : INT PK\lcustomer_id : INT FK\luser_id : INT FK\ltotal_amount : DECIMAL(10,2)\lsale_date : TIMESTAMP}"];
+    sale_items [label="{sale_items|id : INT PK\lsales_id : INT FK\lmedicine_id : INT FK\lquantity : INT\lprice : DECIMAL(10,2)}"];
+    order [label="{order|id : INT PK\luser_id : INT FK\ltotal_amount : FLOAT\lstatus : VARCHAR(20)\lcreated_at : DATETIME}"];
+
+    sales -> customers [label="customer_id"];
+    sales -> user [label="user_id"];
+    sale_items -> sales [label="sales_id"];
+    sale_items -> medicines [label="medicine_id"];
+    order -> user [label="user_id"];
+}
